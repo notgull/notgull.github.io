@@ -4,26 +4,22 @@ title: About
 permalink: /about/
 ---
 
-[Reverie](https://github.com/amitmerchant1990/reverie) is a Jekyll theme which is simple and opinionated. It's actually a fork of [jekyll-now](https://github.com/barryclark/jekyll-now) with some additional features and personal touches which I've implemented to suit my needs for [my blog](https://www.amitmerchant.com).
+I'm notgull! I'm currently a Computer Science student, hoping to eventually be a Computer Science notgull. 
 
-This is a plug-and-play Jekyll theme which you can use on GitHub Pages without even setting up a local environment.
+I got my hands on a QBASIC interpreter at the age of 8, and ever since I've been
+programming in some way, shape or form. Here's a handful of projects I've worked on:
 
-## Features
+- I created the [`breadx`](https://github.com/bread-graphics/breadx) implementation of X11, which was the only X11 implementation in Rust that supports async, and still the one that does it best.
+- I maintain [`smol`](https://github.com/smol-rs/smol), an async runtime for Rust that focuses on a lack of clutter.
+- I'm a frequent contributor to [`softbuffer`](https://github.com/rust-windowing/softbuffer) and [`winit`](https://github.com/rust-windowing/winit), two libraries that aim to make the Rust GUI story read a lot better.
 
-- Command-line free fork-first workflow, using GitHub.com to create, customize and post to your blog
-- Fully responsive and mobile optimized base theme
-- Sass/Coffeescript support using Jekyll 2.0
-- Free hosting on your GitHub Pages user site
-- All the SEO goodies comes in-built
-- Markdown blogging
-- Syntax highlighting using Pygments
-    - [Dracula syntax theme](https://draculatheme.com/) included
-- Disqus commenting
-- Google Analytics integration
-- Fuzzy search across blog posts
-- Pagination of posts works out-of-the-box.
-- Categorize posts out-of-the box
-- RSS Feed
-- In-built sitemap
+In 2017, I began writing for the [SCP Wiki](https://scp-wiki.wikidot.com/notgull). Since
+then, I have written over 70 SCPs and tales. Highlights include 
+[my 001 proposal](https://scp-wiki.wikidot.com/not-a-seagull-proposal),
+[SCP-3733](https://scp-wiki.wikidot.com/scp-3733),
+[Team Bird](https://scp-wiki.wikidot.com/bird), and
+[The Little Robot that Could](https://scp-wiki.wikidot.com/the-little-robot-that-could).
 
-Learn more about it [here](https://github.com/amitmerchant1990/reverie) on how to get started.
+I also create animations and other things on my 
+[YouTube Channel](https://www.youtube.com/channel/UCa22ge_MKVapVkX8lN1jDuQ), if that's
+your flavor.
