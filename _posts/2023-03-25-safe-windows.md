@@ -211,8 +211,8 @@ Together, we can make ~~2015~~ ~~2020~~ 2023 the year that Rust is GUI yet.
 [`Resumed`]: https://docs.rs/winit/latest/winit/event/enum.Event.html#variant.Resumed
 [`Suspended`]: https://docs.rs/winit/latest/winit/event/enum.Event.html#variant.Suspended
 [`sdl2`]: https://crates.io/crates/sdl2
-[`RawWindowHandle`]: https://docs.rs/raw-window-handle/latest/raw-window-handle/enum.RawWindowHandle.html
-[`HasRawWindowHandle`]: https://docs.rs/raw-window-handle/latest/raw-window-handle/trait.HasRawWindowHandle.html
+[`RawWindowHandle`]: https://docs.rs/raw-window-handle/latest/raw_window_handle/enum.RawWindowHandle.html
+[`HasRawWindowHandle`]: https://docs.rs/raw-window-handle/latest/raw_window_handle/trait.HasRawWindowHandle.html
 [`winit`]: https://crates.io/crates/winit
 [`wgpu`]: https://crates.io/crates/wgpu
 [`softbuffer`]: https://crates.io/crates/softbuffer
@@ -221,3 +221,16 @@ Together, we can make ~~2015~~ ~~2020~~ 2023 the year that Rust is GUI yet.
 [`raw-window-handle`]: https://crates.io/crates/raw-window-handle
 [`async-io`]: https://crates.io/crates/async-io
 [`glutin`]: https://crates.io/crates/glutin
+[`RawFd`]: https://doc.rust-lang.org/std/os/fd/type.RawFd.html
+[`AsRawFd`]: https://doc.rust-lang.org/std/os/fd/trait.AsRawFd.html
+[`AsyncRead`]: https://docs.rs/futures-io/latest/futures_io/trait.AsyncRead.html
+[`AsyncWrite`]: https://docs.rs/futures-io/latest/futures_io/trait.AsyncWrite.html
+[`BorrowedFd`]: https://doc.rust-lang.org/stable/std/os/fd/struct.BorrowedFd.html
+[`AsFd`]: https://doc.rust-lang.org/stable/std/os/fd/trait.AsFd.html
+[`sendmsg`]: https://linux.die.net/man/2/sendmsg
+[`close`]: https://linux.die.net/man/2/close
+[rwhpr]: https://github.com/rust-windowing/raw-window-handle/pull/116
+[winitpr]: https://github.com/rust-windowing/winit/pull/2744
+[sbpr]: https://github.com/rust-windowing/softbuffer/pull/82
+[glutinpr]: https://github.com/rust-windowing/glutin/pull/1582
+[refining]: https://github.com/rust-windowing/raw-window-handle/issues/111
