@@ -186,20 +186,20 @@ impl ActiveHandle<'_> {
 
 Now that we have a safe API, the next step is to implement it for all of the popular crates. Thus far, I have draft PRs for:
 
-- [`raw_window_handle`](rwhpr)
-- [`winit`](winitpr)
-- [`softbuffer`](sbpr)
-- [`glutin`](glutinpr) (my first experience with GATs 0_0)
+- [`raw_window_handle`](https://github.com/rust-windowing/raw-window-handle/pull/116)
+- [`winit`](https://github.com/rust-windowing/winit/pull/2744)
+- [`softbuffer`](https://github.com/rust-windowing/softbuffer/pull/82)
+- [`glutin`](https://github.com/rust-windowing/glutin/pull/1582) (my first experience with GATs 0_0)
 
 I'd also like to write a PR for [`wgpu`], but that codebase is huge, so I need to mentally prepare myself first. Between all of the GPU backends it supports, there's probably a lot of different use cases to keep in mind.
 
-If you own a crate that uses [`raw-window-handle`], please comment on [this issue for safer window handles](refining). My goal here is to get a good idea of what the ecosystem will look like after borrowed window handles are available. I want this to be the kind of thing we don't need to break in the future for semver.
+If you own a crate that uses [`raw-window-handle`], please comment on [this issue for safer window handles](https://github.com/rust-windowing/raw-window-handle/issues/111). My goal here is to get a good idea of what the ecosystem will look like after borrowed window handles are available. I want this to be the kind of thing we don't need to break in the future for semver.
 
 ## What's Next?
 
 After I finish modeling what the ecosystem will look like, I'll need to test everything. Testing will need to happen especially on Android, but it's best to test all of the other platforms as well, just to make sure that there's not some invisible line we're crossing. After that, I'll start trying to get these PRs merged. Afterwards, we'll have a safer, sounder Rust GUI ecosystem.
 
-That being said, before I start wading into that mess, I'd like some comments on this proposal. Does this all seem not only safe and sound, but also usable? I'd also like to make sure to keep all platforms in mind; if you are the maintainer for a platform that you'd like to eventually worm your way into [`raw-window-handle`], please comment on [this issue](refining) if your platform would have any special handle requirements.
+That being said, before I start wading into that mess, I'd like some comments on this proposal. Does this all seem not only safe and sound, but also usable? I'd also like to make sure to keep all platforms in mind; if you are the maintainer for a platform that you'd like to eventually worm your way into [`raw-window-handle`], please comment on [this issue](https://github.com/rust-windowing/raw-window-handle/issues/111) if your platform would have any special handle requirements.
 
 Together, we can make ~~2015~~ ~~2020~~ 2023 the year that Rust is GUI yet.
 
@@ -229,8 +229,3 @@ Together, we can make ~~2015~~ ~~2020~~ 2023 the year that Rust is GUI yet.
 [`AsFd`]: https://doc.rust-lang.org/stable/std/os/fd/trait.AsFd.html
 [`sendmsg`]: https://linux.die.net/man/2/sendmsg
 [`close`]: https://linux.die.net/man/2/close
-[rwhpr]: https://github.com/rust-windowing/raw-window-handle/pull/116
-[winitpr]: https://github.com/rust-windowing/winit/pull/2744
-[sbpr]: https://github.com/rust-windowing/softbuffer/pull/82
-[glutinpr]: https://github.com/rust-windowing/glutin/pull/1582
-[refining]: https://github.com/rust-windowing/raw-window-handle/issues/111
