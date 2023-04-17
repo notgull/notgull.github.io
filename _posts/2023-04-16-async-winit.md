@@ -407,3 +407,7 @@ Like any other open-source project, [`async-winit`] is built on top of the work 
 [`async-ui`]: https://crates.io/crates/async-ui
 [`piet-glow`]: https://crates.io/crates/piet-glow
 [Pierre Kreiger]: https://github.com/tomaka
+[`poll`]: https://www.man7.org/linux/man-pages/man2/poll.2.html
+[`epoll`]: https://en.wikipedia.org/wiki/Epoll
+[`kqueue`]: https://en.wikipedia.org/wiki/Kqueue
+[IOCP]: https://learn.microsoft.com/en-us/windows/win32/fileio/i-o-completion-ports?redirectedfrom=MSDN
