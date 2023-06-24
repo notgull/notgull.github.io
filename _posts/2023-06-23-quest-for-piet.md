@@ -138,6 +138,8 @@ RenderContext {
 
 I think the third is because anti-aliasing isn't working properly. Thankfully that's not a problem with the codebase itself, that can be fixed pretty easily by just rewriting my rendering harness a little. On the OpenGL end, that involves creating a new multisampled texture, rendering to that instead, and then copying the multisampled texture to a regular texture. All in all, just a lot of OpenGL boilerplate that isn't really worth repeating here.
 
+![New Iteration](/images/samples-1-new.png)
+
 So far, so good! What's next?
 
 ## Number 2
@@ -148,7 +150,7 @@ This one, I got //almost// right. Here's the reference image:
 
 Here's what [`piet-glow`] makes:
 
-![Glow](/images/piet-glow-01-2.00.png)
+![Glow](/images/piet-glow-02-2.00.png)
 
 Again, very close! Very tantalizingly close!
 
@@ -182,6 +184,8 @@ let (internal_format, format, data_type) = match format {
     _ => panic!("unsupported image format: {format:?}"),
 };
 ```
+
+![New Iteration](/images/samples-2-new.png)
 
 It's definitely hacky. The better way to be to integrate the grayscale conversion into the shader code, but that's a lot of work for very little benefit. I'm not even sure who uses grayscale images. Definitely an issue to look into later.
 
