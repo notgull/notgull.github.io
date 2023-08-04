@@ -28,7 +28,7 @@ The purpose of this one, I think, is to test how text rendering deals with multi
 
 Here's what [`piet-glow`] and [`piet-wgpu`] spit out:
 
-![Glow](/images/glow-test-05-once-again.png)
+![Glow](/images/glow-test-05-2.00.png)
 
 Right! A few issues I can spot right off the bat:
 
@@ -322,7 +322,7 @@ If anything, I'd argue that it's *more* accurate than [`piet-cairo`]'s sample.
 
 ## Conclusion
 
-Well, this has been a roller coaster so far, and it's still far from over. This isn't even the last we'll see of text rendering, but I think I'll try to take a break from it for now. [Next time](quest-for-piet-part-4), we'll see if we can figure out the rest of the samples.
+Well, this has been a roller coaster so far, and it's still far from over. This isn't even the last we'll see of text rendering, but I think I'll try to take a break from it for now. [Next time](/quest-for-piet-part-4/), we'll see if we can figure out the rest of the samples.
 
 [`piet`]: https://crates.io/crates/piet
 [`piet-common`]: https://crates.io/crates/piet-common
@@ -341,3 +341,4 @@ Well, this has been a roller coaster so far, and it's still far from over. This 
 [`theo`]: https://github.com/notgull/theo
 [DejaVu]: https://dejavu-fonts.github.io/
 [texture atlassing]: https://en.wikipedia.org/wiki/Texture_atlas
+[`piet-hardware`]: https://crates.io/crates/piet-hardware

@@ -281,7 +281,7 @@ That seems to fix the gradient rotation...
 
 All it took was just a little rewrite of my application's entire dashing engine and entire gradient engine. Yog Soggoth take me now!
 
-I think that's enough for today. [Next time](./quest-for-piet-part-3) we'll take a look at text rendering and how it can be improved.
+I think that's enough for today. [Next time](/quest-for-piet-part-3/) we'll take a look at text rendering and how it can be improved.
 
 # Addendum: Giving Zeno Another Shot
 
