@@ -2,11 +2,13 @@
 layout: post
 title: The Quest for Piet 2, or, the Revenge of the Gradients
 categories: [gui, rust, piet, drawing, questforpiet]
-excerpt: More samples are more better
+excerpt: More samples! More problems!
 comments: true
 ---
 
-[Last time](/quest-for-piet/), we set up our harnesses for [`piet`] rendering using our hardware-based backends and adjusted it for multisampling and scaling. Today, let's focus on getting some more samples rendered.
+It's high time for some vector graphics.
+
+[Last time](/quest-for-piet/), we set up our harnesses for [`piet`] rendering using our hardware-based backends and adjusted it for multisampling and scaling. Today, let's focus on getting some more samples rendered. The next few samples exhibit line styling and gradient rendering, obviously subjects that are easy and unopinionated. Let's get knee deep.
 
 # Number 3: Dashed-Line Duel
 
@@ -76,13 +78,15 @@ if !style.dash_pattern.is_empty() {
 }
 ```
 
+*Futuregull Edit: Apparently `tiny-skia` just doesn't support odd-numbered dashes. Whoops!*
+
 My first thought was that the resolution scale is too low, so I bumped it up a bit to no noticeable differences. My second thought was that maybe [`tiny-skia`]'s dashing system wasn't as advanced as I thought it was. I figured it was worth it to try a more advanced rasterizer, so I found myself reaching for [`zeno`]. Let's just try translating the path to a [`zeno`] path and see what happens.
 
 ![Glow v2.1](/images/piet-glow-03-unimproved.png)
 
 Okay, that's even worse.
 
-*Edit: After some discussion in the `kurbo` chatroom, apparently I just did it wrong. Whoops! This is not indicative of the `zeno` crate, just my inability to write code that works in prod.*
+*Futuregull Edit: After some discussion in the `kurbo` chatroom, apparently I just did it wrong. Whoops again! This is not indicative of the `zeno` crate, just my inability to write code that works in prod.*
 
 I just noticed that [`kurbo`], the geometry library underlying [`piet`], has an [open PR](https://github.com/linebender/kurbo/pull/286) that adds stroke rasterization. This includes dashing support. Maybe it's worth a shot?
 
@@ -101,11 +105,11 @@ This sample is designed to show off gradients. Here's what the reference image l
 
 ![Reference](/images/cairo-test-04-2.00.png)
 
-...and there is no reference image, because the renderer panicked! Whoop dee doo!
+...and there is no [`piet-glow`] image, because the renderer panicked! Whoop dee doo!
 
-Apparently it's because a gradient with a size of zero is being passed in to some method somewhere along the way, which I forgot to handle. For straight line gradients, the width or heigh will be zero, which [`tiny-skia`] doesn't like.
+Apparently it's because a gradient with a size of zero is being passed in to some method somewhere along the way, which I forgot to handle. For straight line gradients, the width or height will be zero, which [`tiny-skia`] doesn't like.
 
-*I can't believe we're only on sample number four so far...*
+*I can't believe we're only on sample number four, please free me from this mortal coil...*
 
 I did some investigation, and it turns out that this stems from the fact that I did gradients wrong. You see, I was thinking mostly about radial gradients when I was writing the implementation for gradients. I defined a "bounding box" for which the gradient wouldn't repeat inside of.
 
@@ -182,7 +186,7 @@ Our image:
 
 The dashing is a little bit off, I guess? But like I said, close enough for government work. Some of the gradients are also blended in a different way, but I can just chalk that up to [`tiny-skia`] using a different gradient engine than `cairo`. 
 
-The ones on the right are too different to ignore, unfortunately. The ones on the right are rotated in the reference image, but not ours. Looking at the source code for the sample, I'm not sure why this is. Let's just disable the mask on the gradient, and I'm sure we'll figure out what the problem is.
+The shapes on the right are too different to ignore, unfortunately. The shapes on the right are rotated in the reference image, but not ours. Looking at the source code for the sample, I'm not sure why this is. Let's just disable the mask on the gradient, and I'm sure we'll figure out what the problem is.
 
 ![Expanded](/images/gradient-expand.png)
 
@@ -212,7 +216,7 @@ I'm not sure why it's decided to compress the gradient into a single line, nor w
 
 Huh, weird, it looks like it's just a shader issue? Maybe if I... aw, man, it's already midnight. Time flies when you're having Fun, I suppose.
 
-Okay, after a night's sleep I'm feeling a bit more refreshed. Now that I think about it, I take a look at the RenderDoc output and see that the Y UV coordinate is reaching high numbers. That seems weird. What if I just map it to the original gradient bounds?
+Okay, after a night's sleep I'm feeling a bit more refreshed. Now that I think about it, I take a look at the RenderDoc output and see that the Y UV coordinate is too high. That seems weird. What if I just map it to the original gradient bounds?
 
 ![Doc](/images/piet-glow-6-improved.png)
 
@@ -277,7 +281,19 @@ That seems to fix the gradient rotation...
 
 All it took was just a little rewrite of my application's entire dashing engine and entire gradient engine. Yog Soggoth take me now!
 
-I think that's enough for today. Next time we'll take a look at text rendering and how it can be improved.
+I think that's enough for today. [Next time](./quest-for-piet-part-3) we'll take a look at text rendering and how it can be improved.
+
+# Addendum: Giving Zeno Another Shot
+
+I talked to the developer of [`zeno`], and it turns out that I was just using it wrong.
+
+You see, [`zeno`] has a `PathBuilder` interface that can be used to build up a path in whatever format you want. I tried to set it up so that it rendered straight into a `kurbo::BezPath`, but apparently that's hard to do unless you're using `zeno::Command`s.
+
+After some brief rewriting of the stroking code, I get a much better result after rendering:
+
+![Glow v99.0](/images/piet-glow-03-attempt2.png)
+
+That seems to work out better than [`kurbo`] does.
 
 [`piet`]: https://crates.io/crates/piet
 [`piet-glow`]: https://crates.io/crates/piet-glow

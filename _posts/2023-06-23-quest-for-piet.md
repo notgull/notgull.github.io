@@ -6,13 +6,19 @@ excerpt: Drawing with vector graphics is fun. Creating windows with winit is als
 comments: true
 ---
 
-Drawing with vector graphics is fun. Creating windows with [`winit`] is also fun. Yet, there isn't a way to connect the two. There's no real good crates in the Rust ecosystem yet to draw with vector graphics to a window. I want to fix that.
+Graphical User Interfaces (GUIs) are still a sore subject in Rust. The ecosystem is certainly better than when I started was a few years ago, with [`egui`] and [`iced`] providing successful models for GUI projects. However, I still think there are models to explore that are interesting and potentially better than what's out there now.
 
-Lately I've been working on a drawing framework called [`theo`]. It's based on the [`piet`] API, which has famously been used in the [`druid`] GUI framework. The goal is to have a vector drawing framework that can be used out-of-the-box with something like [`winit`]. Another goal is to take advantage of the GPU in order to draw. [`wgpu`] is used in the common case for rendering. The main goal is to be the one-size-fits-all drawing kit that can be used with [`winit`].
+Unfortunately there is a decently-sized hurdle to creating a brand new GUI framework: you need a way to draw it. For a journeyman programmer trying to implement their own GUI framework, it's often one of the hardest parts of the process. The usual model is to take advantage of *vector graphics*; you describe a *path* containing however many lines or curves, and then either fill it will a color (or other pattern) or turn it into a stroke (line). Especially when targeting certain windowing systems, this vector graphics implementation can become very complicated, very quickly.
+
+[`iced`], [`egui`] and [`slint`] provide their own implementations of graphics that are difficult to separate from the framework itself. Unfortunately, these are not a real option. [`druid`], on the other hand, is built on the [`piet`] abstraction. [`piet`] provides an API for vector graphics, but there are several different implementations for [`piet`]. The reference implementation is [`piet-common`]; however, it's pretty tightly integrated with [`druid-shell`] and difficult to get up and running with anything else, like [`winit`].
+
+In my attempts at creating an easily re-usable vector graphics implementation not tied to any GUI framework or windowing system, I decided that I'd create a [`piet`] implementation that can be used with *any* windowing framework. Thanks to the [`raw-window-handle`] crate, it should be easy to just plug in a windowing system and go. I also ae a handful of other goals in mind, like minimizing the use of non-Rust dependencies. I've named it [`theo`], and I think that it's getting close to an initial release.
 
 During my development, I've noticed that [`piet`] comes with a "samples" framework. It has a few examples of using the drawing API, which aims to consistently draw a set of "sample" images. These images showcase the features of the drawing API, like text, transforms and clipping. The CI for [`piet-common`], the reference implementation of [`piet`], runs these samples, saves them to images and compares the output to a set of reference images. This is a great way to use CI to tests for regressions in the drawing API. If a bug is introduced in the drawing code, they know immediately.
 
 I decided to try using these samples for myself. I wasn't prepared for what happened next.
+
+*Notgull Note: Throughout this series I will run into issues and problems with certain Rust crates, and maybe even badmouth them at times. I don't want this to come off as unappreciative; the ecosystem built around graphics in Rust is actually pretty mature. It just needs a few robustness tweaks.*
 
 ## Get Going
 
@@ -24,19 +30,24 @@ I started with [`piet-glow`] first, because I'm a 21-year-old Boomer who only kn
 
 So! We need a display and a window to render to, even though we're just drawing to images that we're saving to files, because... OpenGL! Don't worry, with [`winit`] and [`glutin`] at arms reach, creating a window and a GL context... isn't trivial, but also isn't too hard. In fact, I can even reuse parts of the existing harness I use to run OpenGL examples for [`piet-glow`].
 
-So far, I have a pretty good setup for running OpenGL code. In my examples, I have a shared `util` module that handles all the GL messiness. Just from the `util` module, I can instantiate a `GlutinSetup` type that contains a GL display, a GL context, a window (for Windows, where you need to create the window before you create the GL display) (don't ask, we'll be here all day) and a context that can be made "current". It also provides functionality to create the [`glow`] context, abstracting over the subtle differences between desktop GL and [WebGL].
+I already have a pretty good setup for running OpenGL code. In my examples, I have a shared `util` module that handles all the GL messiness. Just from the `util` module, I can instantiate a `GlutinSetup` type that contains a GL display, a GL context, a window (for Windows, where you need to create the window before you create the GL display) (don't ask, we'll be here all day) and a context that can be made "current". It also provides functionality to create the [`glow`] context, abstracting over the subtle differences between desktop GL and [WebGL].
 
-I won't repeat the setup here, because it's about 200 lines of windowing, OpenGL and image handling code. Not the kind of thing that makes for an engaging blog post. The important part is that it calls [`piet`]'s [`samples_main`] call, which handles generating, saving and comparing sample images.
+I won't repeat the setup here, because it's about 200 lines of windowing, OpenGL and image handling code. Not the kind of thing that makes for an engaging blog post. The important part is that it calls [`piet`]'s [`samples_main`] call, which handles generating, saving and comparing sample images. Easy, right?
 
-Let's see how they turned out! Here's the reference image, generated by [`piet-common`]'s Cairo implementation:
+Let's see how they turned out! Here's one of the reference images, generated by [`piet-common`]'s Cairo implementation:
 
 ![Reference](/images/cairo-test-05-2.00.png)
 
 It's a nice little demonstration of how text rendering works, with varying decorations and colors. Let's see how [`piet-glow`] did:
 
+```
+thread 'main' panicked at 'capture_area is not implemented yet!', crates/piet-wgpu/src/context.rs:727:9
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+
 ...nothing! The test harness panicked! Hooray!
 
-Let's just wrap that in a panic harness and then—
+Let's just wrap that in a panic harness and then everything should be good, right? That panic *certainly* isn't indicative of a much deeper issue.
 
 ![Glow](/images/broken-test.png)
 
@@ -48,7 +59,7 @@ There are 17 [`piet`] samples. Out of these samples, eight of them outright refu
 
 For the problem number two, this is my fault for not looking up how `glReadPixels` worked before running the code. I thought it read things from the top down, not the bottom up. Lesson learned: read the docs.
 
-I just run `image::imageops::flip_vertical_in_place` to fix that.
+I just run `image::imageops::flip_vertical_in_place` to fix that, since this is an example and I don't really want to make this too complicated.
 
 ```rust
 // Somewhere in the rendering harness...
@@ -78,11 +89,15 @@ image::imageops::flip_vertical_in_place(&mut img);
 img.save(path)?;
 ```
 
-Alright, we're basically halfway there! Let's get this bread.
+Alright, we're basically halfway there! It's all downhill from here, right!
 
-## Number 1
+## Number 1: Lethal Lines
 
-Let's start here. [`piet`] zero-indexes its samples, so this is actually sample number two. But the first one is pretty complicated, so I'll save that for last. The reference image is a rendering of a Bezier curve, to demonstrate curve rendering.
+Let's start simple. [`piet`] zero-indexes its samples, so this is actually sample number two. But the first one is pretty complicated, so I'll save that for last. 
+
+The reference image is a rendering of a Bezier curve, to demonstrate curve rendering. If I were starting from scratch, the math behind this would be very intimidating. It's good thing that Rust already has a robust ecosystem for handling these curves, thanks to [`kurbo`] and [`lyon`]. The latter of which I use for converting all of these curves into triangles.
+
+I'll use [`piet-cairo`] as a "source of truth" for reference images. For this sample, here's what [`piet-cairo`] makes:
 
 ![Reference](/images/reference-01.png)
 
@@ -90,13 +105,13 @@ Here's what my renderer spits out:
 
 ![Glow](/images/piet-glow-01-2.00.png)
 
-I got this one mostly right. There's just a few little things:
+I got this one mostly right. There's just a few inconvenient oddities:
 
 - I scaled the image improperly; it should by scaled up by a factor of two.
 - The tolerance of the curves are way too low. You can see that the Bezier curve has, like five segments. It should have more.
 - Everything is way too pixelated.
 
-The first two things are pretty easily fixed by twisting a few knobs. The first thing with the scaling can just be fixed with a couple of adjustments.
+The first two issues are pretty easily fixed by twisting a few knobs. The first thing with the scaling can just be fixed with a couple of adjustments.
 
 ```rust
 // Get the size of the picture to draw.
@@ -136,13 +151,13 @@ RenderContext {
 }
 ```
 
-I think the third is because anti-aliasing isn't working properly. Thankfully that's not a problem with the codebase itself, that can be fixed pretty easily by just rewriting my rendering harness a little. On the OpenGL end, that involves creating a new multisampled texture, rendering to that instead, and then copying the multisampled texture to a regular texture. All in all, just a lot of OpenGL boilerplate that isn't really worth repeating here.
+I think the third issue happens because anti-aliasing isn't working properly. Thankfully that's not a problem with the codebase itself, that can be fixed pretty easily by just rewriting my rendering harness a little. On the OpenGL end, that involves creating a new multisampled texture, rendering to that instead, and then copying the multisampled texture to a regular texture. All in all, just a lot of OpenGL boilerplate that isn't really worth repeating here.
 
 ![New Iteration](/images/sample-1-new.png)
 
 So far, so good! What's next?
 
-## Number 2
+## Number 2: Image Insanity
 
 This one, I got //almost// right. Here's the reference image:
 
@@ -154,7 +169,7 @@ Here's what [`piet-glow`] makes:
 
 Again, very close! Very tantalizingly close!
 
-Looking at the images, they're *almost* right. They're a little bit darker; in fact, the premultiplied color image looks to be a little too dark for my taste. I ignore premultiplying in my code, so that checks out. I'll fix that later.
+Looking at the images, they're *almost* right. They're a little bit darker; in fact, the premultiplied color image looks to be a *little* too dark for my taste. I ignore premultiplying in my code, so that checks out. I'll fix that later.
 
 The elephant in the room is that the image on the right is red instead of grayscale. I originally used `GL_RED` to represent grayscale, but foolishly forgot to accommodate for that in my shader code.
 
@@ -187,13 +202,17 @@ let (internal_format, format, data_type) = match format {
 
 ![New Iteration](/images/sample-2-new.png)
 
-It's definitely hacky. The better way to be to integrate the grayscale conversion into the shader code, but that's a lot of work for very little benefit. I'm not even sure who uses grayscale images. Definitely an issue to look into later.
+It's definitely hacky. In reality, the best way would be to write shaders in such a way that they can handle the various different formats of images. In practice, that's a lot of code for very little practical benefit, as this "image formatting" should be a cold operation anyways. I'm not even sure who uses grayscale images. Definitely an issue to look into later.
 
-# who up webbing they gpu rn
+For now though, it works. I only had to compromise a little, I'm sure I won't have to compromise more later. What's next?
 
-This is all well and good, but we're forgetting something crucial so far. There are two rendering backends in use here; one for OpenGL and one for [`wgpu`]. I'd like to use the [`wgpu`] one as the primary renderer for my application, [`wgpu`] being the new modern, safe thing and all. I just really like Vulkan, okay?
+# Interlude: WebGPU Woes
 
-Originally, I said that [`wgpu`] is pretty easy to render to an image, as opposed to OpenGL, which makes you open a window and all. Let me correct that. [`wgpu`] is easy to render to an image, as long as you aren't a doofus. It's me! I'm the doofus!
+These samples are all well and good, but we're forgetting something crucial so far. There are two rendering backends in use here; one for OpenGL and one for [`wgpu`]. I'd like to use the [`wgpu`] one as the primary renderer for my application, [`wgpu`] being the new modern, safe abstractions for GPU. I just really like Vulkan, okay?
+
+Originally, I said that [`wgpu`] is pretty easy to render to an image, as opposed to OpenGL, which makes you open a window and all. Let me correct that. [`wgpu`] is easy to render to an image, as long as you aren't a doofus.
+
+It's me! I'm the doofus!
 
 When I was first writing [`piet-wgpu`], I styled the API like this:
 
@@ -218,7 +237,7 @@ impl<DaQ: DeviceAndQueue> WgpuContext<DaQ> {
 
 The gist of it is: the base context (which holds all of the shared state) owns the `wgpu::Device` and the `wgpu::Queue`. When you want to render, you pass it a `wgpu::TextureView`, which corresponds to your window or wherever else you want to write to. Once you're done (i.e. you call `RenderContext::flush()`), a render pass is created, the queue is flushed and everything works out, right?
 
-This made sense to me, after skimming the important parts of the `wgpu` API and deciding that I was going to throw a window and nothing else at this API. Except, that's a bad idea! You're not really supposed to own the `wgpu::Device` or the `wgpu::Queue`. They're supposed to be "shared" in a way, such that all of your resources push to the `wgpu::Queue`, and then and only then, at the end of all of it, the `wgpu::Queue` is submitted. `wgpu::Queue::submit()` is a cold operation, so calling it lots of times is a bad idea. Especially with lots of windows, the lag is noticeable, I've found.
+This made sense to me, after skimming the important parts of the `wgpu` API and deciding that I was going to throw a window and nothing else at this API. Except, turns out, that's a bad idea! You're not really supposed to own the `wgpu::Device` or the `wgpu::Queue`. They're supposed to be "shared" in a way, such that all of your drawing resources make calls to the `wgpu::Queue`. Then and only then, at the end of all of it, the `wgpu::Queue` is submitted. `wgpu::Queue::submit()` is a cold operation, so calling it lots of times is a bad idea. Especially with lots of windows, the lag is noticeable, I've found.
 
 You're also not really supposed to be creating your own render pass, which is what I was doing, too. In fact, [`wgpu`] has an idiom for this: the [middleware pattern](https://github.com/gfx-rs/wgpu/wiki/Encapsulating-Graphics-Work). The idea is that the modules of the software should be structured in a way  my API should actually look more like this:
 
@@ -250,7 +269,7 @@ The idea is that the `prepare()` method sets up all of the drawing primitives to
 
 This may seem like an ultimately meaningless distinction. I thought so at first! After all, it's all being pushed to a `wgpu::Queue`, right?
 
-Well, let's say you eventually want to do something with that, aside from just rendering it to the window. Say, let's say you want to copy the data out of the texture into a buffer so you can save it to the disk. 
+Well, let's say you eventually want to do something with that, aside from just rendering it to the window. Say, let's say you want to copy the data out of the texture into a buffer so you can save it to the disk. Such as, my current use case.
 
 I stumbled onto a scenario that might've been obvious to someone more informed than me. I did a "copy to buffer" command after I'd already submitted the queue (in `flush()`), and... I got nothing! The texture was empty, and I was writing blanks to the disk. It took me a while to figure out what was the issue was, but eventually I realized that I needed to rewrite a lot of code.
 
@@ -288,7 +307,7 @@ impl WgpuContext {
         pass.set_bind_group(0, &textures[0]);
 
         // `textures` is dropped here but `pass` still has a reference to it.
-        // Does not compute!
+        // Does not compute! Literally and figuratively!
     }
 }
 ```
@@ -311,7 +330,7 @@ impl<C: GpuContext> Texture<C> {
 }
 ```
 
-It adds a little bit more complexity to the implementation, but it helps the borrow checker make sense of all the lifetimes. As a bonus, I remove interior mutability from my codebase, which is a bad code smell anyways.
+It adds a little bit more complexity to the implementation, but it helps the borrow checker make sense of all the lifetimes. As a bonus, I remove interior mutability from my codebase, which is a bad code smell.
 
 ...and after about an hour of work, two cups of coffee, and another brick in The Wall, I've finally restructured my code to use that middleware pattern. Running the sample generator now, I finally get images that are identical to the reference images! To my untrained eyes, at least.
 
@@ -321,7 +340,7 @@ It adds a little bit more complexity to the implementation, but it helps the bor
 
 Wow, almost 2k words in and I've barely even arrived at any of the actual math behind the graphics. We've barely stumbled our way through two samples, with fifteen more to go. This sounds like it's time for a unique moment in my so-far-short blogging career: it's time for ~~a cliffhanger~~ a series!
 
-Next time, we'll take on line drawing and gradients, two very special use cases that I'm sure will be trivial to implement!
+[Next time](./quest-for-piet-part-2), we'll take on line drawing and gradients, two very special use cases that I'm sure will be trivial to implement!
 
 [`EventLoop`]: https://docs.rs/winit/0.28.6/winit/event_loop/struct.EventLoop.html
 [`Resumed`]: https://docs.rs/winit/0.28.6/winit/event/enum.Event.html#variant.Resumed
