@@ -76,7 +76,7 @@ Thanks to [Ivan Markov](https://github.com/ivmarkov), the underlying machinery o
 
 We now have a new logo! The old [`smol`] logo was a smol, cute orange tabby cat. To represent the new capabilities that [`smol`] has for version 2.0, we've decided to change the logo into a cyborg cat!
 
-![new logo](https://github.com/smol-rs/smol/blob/master/assets/images/logo_fullsize.png)
+![new logo](https://github.com/smol-rs/smol/blob/master/assets/images/logo_fullsize_transparent.png?raw=true)
 
 Thanks to [NebulousStar](https://twitter.com/star_nebulous) on X for drawing this!
 
